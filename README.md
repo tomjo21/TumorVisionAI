@@ -1,11 +1,3 @@
----
-title: TumorVision AI
-emoji: 🧠
-colorFrom: blue
-colorTo: indigo
-sdk: docker
-pinned: false
----
 
 # TumorVision - AI-Powered Brain Tumor Analysis Platform
 
