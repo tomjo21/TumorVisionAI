@@ -1,4 +1,13 @@
 
+---
+title: TumorVision AI
+emoji: 🧠
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # TumorVision - AI-Powered Brain Tumor Analysis Platform
 
 A Flask-based web application for automated brain tumor detection, classification, and 3D visualization using deep learning.
