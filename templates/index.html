@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero animate-fade-in">
+    <h1
+        style="font-size: 3.5rem; margin-bottom: 1rem; background: linear-gradient(135deg, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+        Advanced Brain Tumor Analysis
+    </h1>
+    <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 600px; margin-bottom: 3rem;">
+        Using advanced deep learning models for accurate tumor classification and 3D volumetric segmentation.
+    </p>
+
+    <div class="features-grid"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+        <!-- Card 1 -->
+        <div class="glass card" style="padding: 2rem; border-radius: 16px; transition: transform 0.3s ease;">
+            <div class="icon-bg"
+                style="width: 60px; height: 60px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-image" style="font-size: 1.5rem; color: var(--primary);"></i>
+            </div>
+            <h3 style="margin-bottom: 0.5rem;">2D Classification</h3>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                Upload MRI slices to classify tumor types using our Ensemble Model.
+            </p>
+            <a href="{{ url_for('classify') }}" class="btn btn-primary">Start Analysis <i
+                    class="fa-solid fa-arrow-right" style="margin-left: 0.5rem;"></i></a>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="glass card" style="padding: 2rem; border-radius: 16px; transition: transform 0.3s ease;">
+            <div class="icon-bg"
+                style="width: 60px; height: 60px; background: rgba(139, 92, 246, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-cubes" style="font-size: 1.5rem; color: var(--secondary);"></i>
+            </div>
+            <h3 style="margin-bottom: 0.5rem;">3D Segmentation</h3>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                Upload 3D NIfTI volumes for full segmentation and tumor size calculation.
+            </p>
+            <a href="{{ url_for('segment') }}" class="btn btn-primary">Start Segmentation <i
+                    class="fa-solid fa-arrow-right" style="margin-left: 0.5rem;"></i></a>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="glass card" style="padding: 2rem; border-radius: 16px; transition: transform 0.3s ease;">
+            <div class="icon-bg"
+                style="width: 60px; height: 60px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-layer-group" style="font-size: 1.5rem; color: #10b981;"></i>
+            </div>
+            <h3 style="margin-bottom: 0.5rem;">Slice Comparison</h3>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                Compare max tumor burden slices from two different MRI scans side-by-side.
+            </p>
+            <a href="{{ url_for('compare') }}" class="btn btn-primary">Compare Scans <i class="fa-solid fa-arrow-right"
+                    style="margin-left: 0.5rem;"></i></a>
+        </div>
+    </div>
+</section>
+{% endblock %}

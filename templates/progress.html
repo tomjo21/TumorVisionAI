@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Progress Tracking - TumorVision AI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Longitudinal Progress Tracking</h1>
+    <p>Upload multiple sequential scans (3D NIfTI) to track tumor volume trends over time.</p>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Upload Section -->
+    <div class="glass" style="flex: 1; padding: 2rem; border-radius: 12px; min-width: 350px;">
+        <h3 style="margin-bottom: 1.5rem;">Upload Scans</h3>
+        <form id="progressForm" class="file-upload-container">
+            <div class="upload-zone" id="dropZoneMulti">
+                <i class="fa-solid fa-cloud-arrow-up"
+                    style="font-size: 3rem; color: var(--secondary); margin-bottom: 1rem;"></i>
+                <p>Drag & drop multiple NIfTI files here</p>
+                <p style="font-size: 0.8rem; color: #888;">(.nii or .nii.gz format only)</p>
+                <input type="file" id="progressFiles" name="files" multiple accept=".nii,.gz" style="display: none;">
+                <button type="button" class="btn btn-secondary" style="margin-top: 1rem;"
+                    onclick="document.getElementById('progressFiles').click()">Select Files</button>
+            </div>
+
+            <div id="fileList" style="margin-top: 1.5rem; max-height: 200px; overflow-y: auto;">
+                <!-- Files will be listed here -->
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 2rem;">Analyze
+                Progress</button>
+        </form>
+    </div>
+
+    <!-- Analytics Section -->
+    <div class="glass" style="flex: 2; padding: 1.5rem; border-radius: 12px; min-width: 300px;">
+        <h3>Volume Trend</h3>
+        <div id="chartContainer" style="height: 350px; position: relative; margin-top: 1rem;">
+            <canvas id="progressChart"></canvas>
+            <div id="chartPlaceholder"
+                style="position: absolute; top:50%; left:50%; transform: translate(-50%, -50%); color: #666;">
+                Upload scans to see the trend
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid" style="margin-top: 2rem;" id="comparisonTableContainer" hidden>
+    <div class="glass" style="width: 100%; padding: 1.5rem; border-radius: 12px;">
+        <h3>Detailed Metrics</h3>
+        <table class="metrics-table" id="progressTable" style="margin-top: 1rem;">
+            <thead>
+                <tr>
+                    <th>Scan Batch</th>
+                    <th>Date/File</th>
+                    <th>Total Volume (mm³)</th>
+                    <th>Change (%)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Row template -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const progressForm = document.getElementById('progressForm');
+    const fileInput = document.getElementById('progressFiles');
+    const fileListDisplay = document.getElementById('fileList');
+    let chart = null;
+
+    fileInput.onchange = () => {
+        fileListDisplay.innerHTML = '';
+        Array.from(fileInput.files).forEach(file => {
+            const div = document.createElement('div');
+            div.className = 'glass';
+            div.style = "padding: 0.5rem 1rem; margin-bottom: 0.5rem; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1)";
+            div.innerHTML = `<i class="fa-solid fa-file-medical"></i> ${file.name}`;
+            fileListDisplay.appendChild(div);
+        });
+    };
+
+    progressForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const files = fileInput.files;
+        if (files.length < 2) {
+            alert("Please select at least 2 scans to track progress.");
+            return;
+        }
+
+        const formData = new FormData();
+        Array.from(files).forEach(f => formData.append('files', f));
+
+        // Show loading
+        const btn = progressForm.querySelector('button[type="submit"]');
+        const originalText = btn.innerText;
+        btn.innerText = "Analyzing scans...";
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('/api/progress', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.error) throw new Error(data.error);
+
+            renderTrend(data.results);
+            renderTable(data.results);
+
+        } catch (err) {
+            alert("Error: " + err.message);
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    };
+
+    function renderTrend(results) {
+        document.getElementById('chartPlaceholder').style.display = 'none';
+        const ctx = document.getElementById('progressChart').getContext('2d');
+
+        const labels = results.map(r => r.filename);
+        const values = results.map(r => r.total_volume_mm3);
+
+        if (chart) chart.destroy();
+
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total Tumor Volume (mm³)',
+                    data: values,
+                    borderColor: '#22d3ee',
+                    backgroundColor: 'rgba(34, 211, 238, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 6,
+                    pointBackgroundColor: '#22d3ee'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#888' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#888' }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#fff' } }
+                }
+            }
+        });
+    }
+
+    function renderTable(results) {
+        const container = document.getElementById('comparisonTableContainer');
+        container.hidden = false;
+        const tbody = document.querySelector('#progressTable tbody');
+        tbody.innerHTML = '';
+
+        results.forEach((res, i) => {
+            let changeHtml = '--';
+            let statusHtml = '<span class="status-badge" style="background:#888;">Baseline</span>';
+
+            if (i > 0) {
+                const prev = results[i - 1].total_volume_mm3;
+                const curr = res.total_volume_mm3;
+                const change = ((curr - prev) / prev) * 100;
+                const sign = change > 0 ? '+' : '';
+                const color = change > 0 ? '#ef4444' : '#10b981';
+                changeHtml = `<span style="color:${color}">${sign}${change.toFixed(2)}%</span>`;
+
+                statusHtml = change > 0
+                    ? '<span class="status-badge" style="background:#ef4444;">Growth</span>'
+                    : '<span class="status-badge" style="background:#10b981;">Regression</span>';
+            }
+
+            const row = `
+                <tr>
+                    <td>#${i + 1}</td>
+                    <td>${res.filename}</td>
+                    <td>${res.total_volume_mm3.toLocaleString()}</td>
+                    <td>${changeHtml}</td>
+                    <td>${statusHtml}</td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+</script>
+
+<style>
+    .metrics-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .metrics-table th {
+        text-align: left;
+        padding: 1rem;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        color: #888;
+        font-weight: 500;
+    }
+
+    .metrics-table td {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: white;
+    }
+</style>
+{% endblock %}

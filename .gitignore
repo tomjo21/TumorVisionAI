@@ -1,0 +1,26 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+
+# Virtual environment
+venv/
+env/
+
+# IDE settings
+.vscode/
+.idea/
+
+# Initial uploads from previous versions (exclude to save space)
+static/uploads/*
+!static/uploads/.gitkeep
+static/results/*
+!static/results/.gitkeep
+
+# Models (Downloaded at runtime now)
+models/*.keras
+models/*.h5
+models/*.nii
+models/*.nii.gz

@@ -1,0 +1,12 @@
+flask
+tensorflow
+numpy
+pillow
+nibabel
+matplotlib
+scipy
+requests
+gunicorn
+scikit-image
+fpdf
+huggingface_hub
