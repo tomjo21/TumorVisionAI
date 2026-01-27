@@ -27,21 +27,37 @@ A Flask-based web application for automated brain tumor detection, classificatio
 - **ML Models**: Ensemble 2D CNN, 3D U-Net
 - **Medical Imaging**: NiBabel, NumPy
 
-## Installation
+## Run Locally (Easiest Way)
+The easiest way to run TumorVision is using Docker, which handles all dependencies and model downloads for you.
 
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+
+### 1. Build the App
+Open your terminal in the project folder and run:
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd MainProject
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the application
-python app.py
+docker build -t tumorvision .
 ```
 
-The application will be available at `http://localhost:5000`
+### 2. Run the App
+```bash
+docker run -p 5000:7860 tumorvision
+```
+
+### 3. Access
+Open your browser and visit: `http://localhost:5000`
+
+*Note: The first time you run it, it will take ~2 minutes to automatically download the AI models (1.2GB) before the app starts.*
+
+## For Developers (GitHub & Secrets)
+If you are cloning this repo and need to configure API keys (e.g., for future AI features):
+
+1.  **Duplicate** `.env.example` and rename it to `.env`.
+2.  **Add your secrets** to `.env` (e.g., `API_KEY=...`).
+3.  **Run** the app. Docker/Flask will load these variables.
+
+> [!WARNING]
+> **Never** commit your `.env` file to GitHub. It is already ignored by `.gitignore`.
 
 ## Project Structure
 
