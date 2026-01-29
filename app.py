@@ -134,8 +134,25 @@ def api_mesh():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
         
-        # Predict
-        segmentation = predict_3d_model(models['3d'], filepath)
+        # Custom Prediction Pipeline for Mesh Generation (need access to volume)
+        from utils import preprocess_volume_3d
+        
+        model = models['3d']
+        input_shape = model.input_shape
+        target_shape = None
+        if len(input_shape) == 5:
+            target_shape = input_shape[1:4]
+            
+        # 1. Preprocess
+        processed_volume = preprocess_volume_3d(filepath, target_shape=target_shape)
+        
+        # 2. Channel Adapt
+        if len(input_shape) == 5:
+             if input_shape[-1] == 3 and processed_volume.shape[-1] == 1:
+                  processed_volume = np.repeat(processed_volume, 3, axis=-1)
+                  
+        # 3. Predict
+        segmentation = model.predict(processed_volume)
         
         # Get spacing for scaling (convert numpy floats to native python floats)
         try:
@@ -150,7 +167,10 @@ def api_mesh():
         mask_3d = np.argmax(segmentation[0], axis=-1) # (128, 128, 128)
         
         from utils_mesh import generate_tumor_mesh_obj
-        obj_content = generate_tumor_mesh_obj(mask_3d)
+        # Pass the original processed volume (channel 0) for Shell generation
+        # processed_volume is (1, 128, 128, 128, C)
+        vol_for_shell = processed_volume[0, ..., 0] 
+        obj_content = generate_tumor_mesh_obj(mask_3d, volume=vol_for_shell)
         
         if obj_content is None:
             return jsonify({'error': 'No tumor detected for 3D reconstruction'}), 404

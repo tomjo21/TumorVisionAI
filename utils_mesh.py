@@ -2,7 +2,7 @@ import numpy as np
 from skimage import measure
 from scipy import ndimage
 
-def generate_tumor_mesh_obj(segmentation_mask):
+def generate_tumor_mesh_obj(segmentation_mask, volume=None):
     """
     Enhanced mesher that generates:
     1. A semi-transparent "Brain Shell".
@@ -16,21 +16,33 @@ def generate_tumor_mesh_obj(segmentation_mask):
 
     # 1. GENERATE BRAIN SHELL (Envelope)
     # This captures the entire brain/head volume to provide context.
-    brain_mask = (segmentation_mask >= 0).astype(np.uint8) # Default any valid data
-    # Better: use actually non-zero voxels for the brain shape
-    brain_mask = (segmentation_mask > -1).astype(np.uint8) # Placeholder
     
-    # Let's assume the user wants the "Envelope" of the brain.
-    # We take all non-background voxels. 
-    # Since 3D MRI data is usually 0 for air, voxels > 0 (or a threshold) are brain.
-    # We'll use a simplified envelope for the shell.
     try:
-        # Create a simplified shell of the whole scanned volume
-        shell_mask = (segmentation_mask >= 0).astype(np.uint8)
-        # Apply slight blur to make the shell smoother
-        shell_mask = ndimage.binary_closing(shell_mask, iterations=2)
+        shell_mask = None
         
-        verts, faces, normals, values = measure.marching_cubes(shell_mask, level=0.5, step_size=2) # Step size 2 for performance
+        if volume is not None:
+            # Use actual MRI intensity to find brain bounds
+            # volume is likely Z-scored. Zeros are background.
+            # We treat non-zero (or above small threshold) as brain.
+            # Squeeze to ensure 3D (128, 128, 128)
+            vol_3d = np.squeeze(volume)
+            if vol_3d.ndim > 3:
+                # If channels, take mean or max
+                vol_3d = np.mean(vol_3d, axis=-1)
+                
+            shell_mask = (np.abs(vol_3d) > 0.01).astype(np.uint8)
+        else:
+            # Fallback to older method (bounding box of data?)
+            # or just don't render shell if no volume
+            shell_mask = (segmentation_mask > -1).astype(np.uint8) 
+
+        # Apply dilation/closing to make it a solid "egg" shape
+        shell_mask = ndimage.binary_closing(shell_mask, iterations=3)
+        # Fill holes
+        shell_mask = ndimage.binary_fill_holes(shell_mask)
+        
+        # Use higher step_size for shell to keep it low-poly and fast
+        verts, faces, normals, values = measure.marching_cubes(shell_mask, level=0.5, step_size=3)
         
         obj_lines.append("g BrainShell")
         for v in verts: obj_lines.append(f"v {v[0]} {v[1]} {v[2]}")
@@ -40,7 +52,8 @@ def generate_tumor_mesh_obj(segmentation_mask):
             obj_lines.append(f"f {v1}//{v1} {v2}//{v2} {v3}//{v3}")
         current_vert_offset += len(verts)
         found_any = True
-    except:
+    except Exception as e:
+        print(f"Shell generation error: {e}")
         pass
 
     # 2. GENERATE TUMOR REGIONS
