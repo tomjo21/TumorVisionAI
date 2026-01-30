@@ -105,12 +105,12 @@ def predict_3d():
         metrics = calculate_tumor_metrics(segmentation, voxel_spacing=voxel_spacing)
         
         # 4. Visualization
-        processed_volume, crop_coords = preprocess_volume_3d(filepath, return_coords=True)
+        processed_volume = preprocess_volume_3d(filepath)
         # Adapt for 3-channel models
         if models['3d'].input_shape[-1] == 3 and processed_volume.shape[-1] == 1:
             processed_volume = np.repeat(processed_volume, 3, axis=-1)
             
-        slice_img_base64, max_slice = generate_slice_visualization(filepath, segmentation, crop_coords)
+        slice_img_base64, max_slice = generate_slice_visualization(processed_volume, segmentation)
         
         return jsonify({
             'metrics': metrics,
@@ -258,13 +258,13 @@ def api_report_3d():
         # Generate Visualization Image
         try:
             from utils import generate_slice_visualization
-            processed_vol, crop_coords = preprocess_volume_3d(filepath, return_coords=True)
+            processed_vol = preprocess_volume_3d(filepath)
             
             # Channel handling
             if models['3d'].input_shape[-1] == 3 and processed_vol.shape[-1] == 1:
                 processed_vol = np.repeat(processed_vol, 3, axis=-1)
                 
-            b64_str, _ = generate_slice_visualization(filepath, segmentation, crop_coords)
+            b64_str, _ = generate_slice_visualization(processed_vol, segmentation)
             header, encoded = b64_str.split(',', 1)
             data = base64.b64decode(encoded)
             
