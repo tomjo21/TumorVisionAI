@@ -53,7 +53,7 @@
                 <tr>
                     <th>Scan Batch</th>
                     <th>Date/File</th>
-                    <th>Total Volume (mm³)</th>
+                    <th>Total Volume (cm³)</th>
                     <th>Change (%)</th>
                     <th>Status</th>
                 </tr>
@@ -125,7 +125,7 @@
         const ctx = document.getElementById('progressChart').getContext('2d');
 
         const labels = results.map(r => r.filename);
-        const values = results.map(r => r.total_volume_mm3);
+        const values = results.map(r => r.total_volume_cm3);
 
         if (chart) chart.destroy();
 
@@ -134,7 +134,7 @@
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Total Tumor Volume (mm³)',
+                    label: 'Total Tumor Volume (cm³)',
                     data: values,
                     borderColor: '#22d3ee',
                     backgroundColor: 'rgba(34, 211, 238, 0.1)',
@@ -176,8 +176,8 @@
             let statusHtml = '<span class="status-badge" style="background:#888;">Baseline</span>';
 
             if (i > 0) {
-                const prev = results[i - 1].total_volume_mm3;
-                const curr = res.total_volume_mm3;
+                const prev = results[i - 1].total_volume_cm3;
+                const curr = res.total_volume_cm3;
                 const change = ((curr - prev) / prev) * 100;
                 const sign = change > 0 ? '+' : '';
                 const color = change > 0 ? '#ef4444' : '#10b981';
@@ -192,7 +192,7 @@
                 <tr>
                     <td>#${i + 1}</td>
                     <td>${res.filename}</td>
-                    <td>${res.total_volume_mm3.toLocaleString()}</td>
+                    <td>${res.total_volume_cm3.toLocaleString()}</td>
                     <td>${changeHtml}</td>
                     <td>${statusHtml}</td>
                 </tr>

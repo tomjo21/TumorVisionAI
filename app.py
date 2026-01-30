@@ -326,7 +326,7 @@ def api_progress():
             
             results.append({
                 'filename': filename,
-                'total_volume_mm3': metrics['total_volume_mm3'],
+                'total_volume_cm3': metrics['total_volume_cm3'],
                 'metrics': metrics
             })
             

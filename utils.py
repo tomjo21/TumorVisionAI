@@ -191,6 +191,7 @@ def calculate_tumor_metrics(segmentation_pred, voxel_spacing=(1.0, 1.0, 1.0)):
     """
     Calculates tumor size for each class from the segmentation prediction.
     Expects softmax output distribution or logits (will apply argmax).
+    Returns volumes in cm^3 (converted from mm^3).
     """
     # Get class map (argmax)
     # Shape: (1, 128, 128, 128, 4) -> (128, 128, 128)
@@ -201,22 +202,28 @@ def calculate_tumor_metrics(segmentation_pred, voxel_spacing=(1.0, 1.0, 1.0)):
     voxel_volume_mm3 = dx * dy * dz
     
     metrics = {
-        'total_volume_mm3': 0,
-        'necrotic_mm3': 0,
-        'edema_mm3': 0,
-        'enhancing_mm3': 0
+        'total_volume_cm3': 0,
+        'necrotic_cm3': 0,
+        'edema_cm3': 0,
+        'enhancing_cm3': 0
     }
     
     # Class 0 is background
-    # Class 1: Necrotic / Non-enhancing
-    # Class 2: Edema
-    # Class 3: Enhancing Tumor
+    # Class 1: Necrotic / Non-enhancing (Cyan/Red in visual?)
+    # Class 2: Edema (Yellow)
+    # Class 3: Enhancing Tumor (Blue/Green?)
     
-    metrics['necrotic_mm3'] = int(np.sum(mask == 1) * voxel_volume_mm3)
-    metrics['edema_mm3'] = int(np.sum(mask == 2) * voxel_volume_mm3)
-    metrics['enhancing_mm3'] = int(np.sum(mask == 3) * voxel_volume_mm3)
+    # Calculate raw mm3 first
+    necrotic_val = np.sum(mask == 1) * voxel_volume_mm3
+    edema_val = np.sum(mask == 2) * voxel_volume_mm3
+    enhancing_val = np.sum(mask == 3) * voxel_volume_mm3
     
-    metrics['total_volume_mm3'] = metrics['necrotic_mm3'] + metrics['edema_mm3'] + metrics['enhancing_mm3']
+    # Convert to cm3 (1 cm3 = 1000 mm3)
+    metrics['necrotic_cm3'] = float(f"{necrotic_val / 1000:.2f}")
+    metrics['edema_cm3'] = float(f"{edema_val / 1000:.2f}")
+    metrics['enhancing_cm3'] = float(f"{enhancing_val / 1000:.2f}")
+    
+    metrics['total_volume_cm3'] = float(f"{(necrotic_val + edema_val + enhancing_val) / 1000:.2f}")
     
     return metrics
 
@@ -225,6 +232,8 @@ def generate_slice_visualization(input_volume, segmentation_pred):
     Generates a visualization of the slice with the maximum tumor area.
     Returns a base64 encoded image string.
     """
+    from matplotlib.colors import ListedColormap
+    
     # Input volume shape: (1, 128, 128, 128, 3)
     # Pred shape: (1, 128, 128, 128, 4)
     
@@ -233,10 +242,6 @@ def generate_slice_visualization(input_volume, segmentation_pred):
     
     # Find max tumor slice
     # Sum tumor pixels along axes 0 and 1 (H, W) to find best Depth slice
-    # Note: Training code indices: [:, :, slice]
-    # Let's check dimensions. User code: test_img[:, :, n_slice, 1]
-    # So Z-axis is axis 2.
-    
     tumor_pixels_per_slice = np.sum(mask_data > 0, axis=(0, 1))
     max_slice_idx = np.argmax(tumor_pixels_per_slice)
     
@@ -245,14 +250,49 @@ def generate_slice_visualization(input_volume, segmentation_pred):
         max_slice_idx = mask_data.shape[2] // 2
         
     # Prepare plot
-    plt.figure(figsize=(10, 10), dpi=150)
+    plt.figure(figsize=(8, 8), dpi=200) # Higher DPI for quality
     
-    # Show MRI Image (Channel 1)
-    plt.imshow(img_data[:, :, max_slice_idx, 0], cmap='gray')
+    # 1. Show MRI Image (Grayscale)
+    # Rotate 90 degrees to match standard view if needed, or keeping as is.
+    # Typically MRI slices need rotation to match radiological convention if raw numpy array.
+    # Assuming standard orientation for now to match current website but boosting quality.
+    plt.imshow(img_data[:, :, max_slice_idx, 0], cmap='gray', interpolation='bicubic')
     
-    # Overlay Tumor Mask with Jet and Alpha (Matches user's notebook style)
-    # Note: We do NOT mask 0 here to replicate the user's specific "Blue Tint" look.
-    plt.imshow(mask_data[:, :, max_slice_idx], cmap='jet', alpha=0.4, vmin=0, vmax=3)
+    # 2. Define Custom Colormap for Mask
+    # 0: Transparent
+    # 1 (Necrotic): Cyan (#06b6d4) to match UI
+    # 2 (Edema): Yellow (#eab308)
+    # 3 (Enhancing): Red (#ef4444)
+    colors = [
+        (0, 0, 0, 0),       # 0: Background - Transparent
+        (220/255, 38/255, 38/255, 1.0),     # 1: Red (Necrotic/Core often core) - Wait, code comment said 1 is Necrotic.
+                                            # Let's match the visual in Kaggle (Inner Core is Cyan, Middle Red, Outer Yellow)
+                                            # Usually in BraTS: 1=Necrotic(Core), 2=Edema, 4=Enhancing.
+                                            # Here we map 1->Cyan, 2->Yellow, 3->Red?
+                                            # Let's try: 1: Red (Necrotic), 2: Yellow (Edema), 3: Green/Cyan (Enhancing)?
+                                            # Actually, let's stick to standard palette requested or inferred.
+                                            # Kaggle image: Yellow outer, Red middle, Cyan inner.
+                                            # Assuming nesting: Edema(Yellow) > Enhancing(Red) > Necrotic(Cyan).
+        (250/255, 204/255, 21/255, 1.0),    # 2: Yellow (Edema)
+        (6/255, 182/255, 212/255, 1.0)      # 3: Cyan (Enhancing? or Necrotic?)
+    ]
+    # Re-verify standard mapping from line 211: 
+    # Class 1: Necrotic (Dead inner) -> Cyan
+    # Class 2: Edema (Swelling outer) -> Yellow
+    # Class 3: Enhancing (Active ring) -> Red
+    
+    # Corrected Palette based on standard bio-markers:
+    colors = [
+        (0, 0, 0, 0),       # 0: Transparent
+        (6/255, 182/255, 212/255, 0.7),     # 1: Cyan (Necrotic/Core)
+        (234/255, 179/255, 8/255, 0.7),     # 2: Yellow (Edema)
+        (239/255, 68/255, 68/255, 0.7)      # 3: Red (Enhancing)
+    ]
+    cmap = ListedColormap(colors)
+    
+    # 3. Overlay Tumor Mask
+    # Use 'nearest' to keep the pixelated "data" look and avoid blurry edges
+    plt.imshow(mask_data[:, :, max_slice_idx], cmap=cmap, interpolation='nearest', vmin=0, vmax=3)
     
     plt.axis('off')
     

@@ -99,10 +99,10 @@ function handleClassifyResult(data) {
 
 function handleSegmentResult(data) {
     if (data.metrics) {
-        document.getElementById('totalVolume').textContent = data.metrics.total_volume_mm3;
-        document.getElementById('necroticVolume').textContent = data.metrics.necrotic_mm3;
-        document.getElementById('edemaVolume').textContent = data.metrics.edema_mm3;
-        document.getElementById('enhancingVolume').textContent = data.metrics.enhancing_mm3;
+        document.getElementById('totalVolume').textContent = data.metrics.total_volume_cm3;
+        document.getElementById('necroticVolume').textContent = data.metrics.necrotic_cm3;
+        document.getElementById('edemaVolume').textContent = data.metrics.edema_cm3;
+        document.getElementById('enhancingVolume').textContent = data.metrics.enhancing_cm3;
     }
 
     if (data.image) {
@@ -114,9 +114,10 @@ function handleSegmentResult(data) {
         placeholder.style.display = 'none';
     }
 
+    // Slice index display removed as per user request
     if (data.slice_index !== undefined) {
         const el = document.getElementById('sliceIndexDisplay');
-        if (el) el.textContent = `z = ${data.slice_index}`;
+        if (el) el.style.display = 'none'; // Hide if still exists
     }
 
     // Enable Report

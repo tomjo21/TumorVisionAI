@@ -48,14 +48,14 @@ def generate_pdf_report_3d(metrics, img_path, original_filename, output_path):
     pdf.set_font('Arial', 'B', 9)
     pdf.set_fill_color(230, 230, 230)
     pdf.cell(90, 7, "  Anatomical Layer / Region", 1, 0, 'L', True)
-    pdf.cell(50, 7, "  Calculated Volume (mm3)", 1, 1, 'L', True)
+    pdf.cell(50, 7, "  Calculated Volume (cm3)", 1, 1, 'L', True)
     
     pdf.set_font('Arial', '', 9)
     regions = [
-        ("Enhancing Tumor", metrics.get('enhancing_mm3', 0), (239, 68, 68)),
-        ("Edema (Peritumoral)", metrics.get('edema_mm3', 0), (234, 179, 8)),
-        ("Necrotic / Non-enhancing Core", metrics.get('necrotic_mm3', 0), (34, 211, 238)),
-        ("Total Combined Tumor Burden", metrics.get('total_volume_mm3', 0), (0, 0, 0))
+        ("Enhancing Tumor", metrics.get('enhancing_cm3', 0), (239, 68, 68)),
+        ("Edema (Peritumoral)", metrics.get('edema_cm3', 0), (234, 179, 8)),
+        ("Necrotic / Non-enhancing Core", metrics.get('necrotic_cm3', 0), (34, 211, 238)),
+        ("Total Combined Tumor Burden", metrics.get('total_volume_cm3', 0), (0, 0, 0))
     ]
     
     for label, val, col in regions:

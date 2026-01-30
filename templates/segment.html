@@ -34,12 +34,7 @@
 
             <!-- Slice Viewer -->
             <div class="glass" style="flex: 2; padding: 1.5rem; border-radius: 12px; min-width: 300px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h4 style="margin: 0;">Max Tumor Slice</h4>
-                    <span id="sliceIndexDisplay"
-                        style="background: rgba(255,255,255,0.1); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.9rem; color: var(--secondary);">z
-                        = --</span>
-                </div>
+
                 <div style="background: #000; min-height: 400px; display: flex; align-items: center; justify-content: center; border-radius: 8px; overflow: hidden; position: relative;"
                     id="sliceCanvasContainer">
                     <img id="sliceImage" src="" alt="Segmentation Prediction"
@@ -86,28 +81,28 @@
                 <div style="margin-bottom: 1.5rem;">
                     <p style="color: var(--text-muted); font-size: 0.9rem;">Total Tumor Volume</p>
                     <p style="font-size: 2rem; font-weight: 700; color: var(--secondary);">
-                        <span id="totalVolume">--</span> <span style="font-size: 1rem;">mm³</span>
+                        <span id="totalVolume">--</span> <span style="font-size: 1rem;">cm³</span>
                     </p>
                 </div>
 
                 <div style="margin-bottom: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
                     <p style="color: #22d3ee; font-size: 0.9rem; margin-bottom: 0.2rem;">Necrotic / Non-enhancing</p>
                     <p style="font-size: 1.2rem; font-weight: 600;">
-                        <span id="necroticVolume">--</span> mm³
+                        <span id="necroticVolume">--</span> cm³
                     </p>
                 </div>
 
                 <div style="margin-bottom: 1rem;">
                     <p style="color: #eab308; font-size: 0.9rem; margin-bottom: 0.2rem;">Edema</p>
                     <p style="font-size: 1.2rem; font-weight: 600;">
-                        <span id="edemaVolume">--</span> mm³
+                        <span id="edemaVolume">--</span> cm³
                     </p>
                 </div>
 
                 <div style="margin-bottom: 1rem;">
                     <p style="color: #ef4444; font-size: 0.9rem; margin-bottom: 0.2rem;">Enhancing Tumor</p>
                     <p style="font-size: 1.2rem; font-weight: 600;">
-                        <span id="enhancingVolume">--</span> mm³
+                        <span id="enhancingVolume">--</span> cm³
                     </p>
                 </div>
             </div>
