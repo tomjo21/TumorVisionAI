@@ -26,7 +26,7 @@
                 <li><a href="{{ url_for('classify') }}" class="nav-item">Classification</a></li>
                 <li><a href="{{ url_for('segment') }}" class="nav-item">Segmentation</a></li>
 
-                <li><a href="{{ url_for('progress') }}" class="nav-item">Progress Tracking</a></li>
+                <li><a href="{{ url_for('comparison') }}" class="nav-item">Comparison</a></li>
             </ul>
         </nav>
 
@@ -55,11 +55,11 @@
             <div
                 style="padding: 0.8rem; background: rgba(255,255,255,0.05); border-radius: 12px; border-bottom-left-radius: 2px;">
                 Hi! I'm Olmo, your TumorVision assistant. I can help you understand 3D colors, classification
-                results, or track your progress. How can I help?
+                results, or compare sequential scans. How can I help?
             </div>
             <div id="olmo-quick-actions" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
                 <button onclick="quickAsk('What do the 3D colors mean?')" class="quick-btn">3D Colors?</button>
-                <button onclick="quickAsk('How do I track progress?')" class="quick-btn">Progress Tracking?</button>
+                <button onclick="quickAsk('How do I manage comparison?')" class="quick-btn">Comparison?</button>
                 <button onclick="quickAsk('Tell me a joke')" class="quick-btn">Joke?</button>
             </div>
         </div>

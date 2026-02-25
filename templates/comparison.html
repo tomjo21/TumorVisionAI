@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Progress Tracking - TumorVision AI{% endblock %}
+{% block title %}Comparison - TumorVision AI{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1>Longitudinal Progress Tracking</h1>
+    <h1>Longitudinal Comparison</h1>
     <p>Upload multiple sequential scans to track tumor volume trends over time.</p>
 </div>
 
@@ -12,15 +12,15 @@
     <!-- Upload Section -->
     <div class="glass" style="flex: 1; padding: 2rem; border-radius: 12px; min-width: 350px;">
         <h3 style="margin-bottom: 1.5rem;">Upload Scans</h3>
-        <form id="progressForm" class="file-upload-container">
+        <form id="comparisonForm" class="file-upload-container">
             <div class="upload-zone" id="dropZoneMulti">
                 <i class="fa-solid fa-cloud-arrow-up"
                     style="font-size: 3rem; color: var(--secondary); margin-bottom: 1rem;"></i>
                 <p>Drag & drop multiple NIfTI files here</p>
                 <p style="font-size: 0.8rem; color: #888;">(.nii or .nii.gz format only)</p>
-                <input type="file" id="progressFiles" name="files" multiple accept=".nii,.gz" style="display: none;">
+                <input type="file" id="comparisonFiles" name="files" multiple accept=".nii,.gz" style="display: none;">
                 <button type="button" class="btn btn-secondary" style="margin-top: 1rem;"
-                    onclick="document.getElementById('progressFiles').click()">Select Files</button>
+                    onclick="document.getElementById('comparisonFiles').click()">Select Files</button>
             </div>
 
             <div id="fileList" style="margin-top: 1.5rem; max-height: 200px; overflow-y: auto;">
@@ -28,7 +28,7 @@
             </div>
 
             <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 2rem;">Analyze
-                Progress</button>
+                Comparison</button>
         </form>
     </div>
 
@@ -36,7 +36,7 @@
     <div class="glass" style="flex: 2; padding: 1.5rem; border-radius: 12px; min-width: 300px;">
         <h3>Volume Trend</h3>
         <div id="chartContainer" style="height: 350px; position: relative; margin-top: 1rem;">
-            <canvas id="progressChart"></canvas>
+            <canvas id="comparisonChart"></canvas>
             <div id="chartPlaceholder"
                 style="position: absolute; top:50%; left:50%; transform: translate(-50%, -50%); color: #666;">
                 Upload scans to see the trend
@@ -48,7 +48,7 @@
 <div class="dashboard-grid" style="margin-top: 2rem;" id="comparisonTableContainer" hidden>
     <div class="glass" style="width: 100%; padding: 1.5rem; border-radius: 12px;">
         <h3>Detailed Metrics</h3>
-        <table class="metrics-table" id="progressTable" style="margin-top: 1rem;">
+        <table class="metrics-table" id="comparisonTable" style="margin-top: 1rem;">
             <thead>
                 <tr>
                     <th>Scan Batch</th>
@@ -67,8 +67,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const progressForm = document.getElementById('progressForm');
-    const fileInput = document.getElementById('progressFiles');
+    const comparisonForm = document.getElementById('comparisonForm');
+    const fileInput = document.getElementById('comparisonFiles');
     const fileListDisplay = document.getElementById('fileList');
     let chart = null;
 
@@ -83,11 +83,11 @@
         });
     };
 
-    progressForm.onsubmit = async (e) => {
+    comparisonForm.onsubmit = async (e) => {
         e.preventDefault();
         const files = fileInput.files;
         if (files.length < 2) {
-            alert("Please select at least 2 scans to track progress.");
+            alert("Please select at least 2 scans to track comparison.");
             return;
         }
 
@@ -95,13 +95,13 @@
         Array.from(files).forEach(f => formData.append('files', f));
 
         // Show loading
-        const btn = progressForm.querySelector('button[type="submit"]');
+        const btn = comparisonForm.querySelector('button[type="submit"]');
         const originalText = btn.innerText;
         btn.innerText = "Analyzing scans...";
         btn.disabled = true;
 
         try {
-            const response = await fetch('/api/progress', {
+            const response = await fetch('/api/comparison', {
                 method: 'POST',
                 body: formData
             });
@@ -110,7 +110,7 @@
             if (data.error) throw new Error(data.error);
 
             renderTrend(data.results);
-            renderTable(data.results);
+            renderComparisonTable(data.results);
 
         } catch (err) {
             alert("Error: " + err.message);
@@ -122,7 +122,7 @@
 
     function renderTrend(results) {
         document.getElementById('chartPlaceholder').style.display = 'none';
-        const ctx = document.getElementById('progressChart').getContext('2d');
+        const ctx = document.getElementById('comparisonChart').getContext('2d');
 
         const labels = results.map(r => r.filename);
         const values = results.map(r => {
@@ -169,10 +169,10 @@
         });
     }
 
-    function renderTable(results) {
+    function renderComparisonTable(results) {
         const container = document.getElementById('comparisonTableContainer');
         container.hidden = false;
-        const tbody = document.querySelector('#progressTable tbody');
+        const tbody = document.querySelector('#comparisonTable tbody');
         tbody.innerHTML = '';
 
         results.forEach((res, i) => {

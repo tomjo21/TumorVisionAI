@@ -292,12 +292,12 @@ def api_report_3d():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-@app.route('/progress')
-def progress():
-    return render_template('progress.html')
+@app.route('/comparison')
+def comparison():
+    return render_template('comparison.html')
 
-@app.route('/api/progress', methods=['POST'])
-def api_progress():
+@app.route('/api/comparison', methods=['POST'])
+def api_comparison():
     try:
         if 'files' not in request.files:
             return jsonify({'error': 'No files uploaded'}), 400
@@ -336,7 +336,7 @@ def api_progress():
         return jsonify({'results': results})
         
     except Exception as e:
-        print(f"Progress API Error: {e}")
+        print(f"Comparison API Error: {e}")
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
@@ -358,14 +358,14 @@ def api_chat_olmo():
             "weather": "I don't have a window, but it's always a clear day inside the server! Best to check your local forecast.",
             "joke": "Why did the MRI scanner get a promotion? Because it was outstanding in its field (and very attractive!).",
             "time": f"In the server world, it's always 'Analysis Time'! But your local clock should be accurate.",
-            "help": "I can help with: \n1. 3D Color Explanations\n2. Progress Tracking help\n3. Understanding AI Confidence\n4. General small talk!"
+            "help": "I can help with: \n1. 3D Color Explanations\n2. Comparison analysis help\n3. Understanding AI Confidence\n4. General small talk!"
         }
 
         # 2. SYSTEM / CLINICAL KNOWLEDGE
         system_knowledge = {
             "classification": "Classification uses our 2D ensemble model. It identifies if a tumor is a Glioma, Meningioma, or Pituitary tumor. We use Grad-CAM heatmaps to show you exactly where the AI is looking.",
             "segmentation": "Segmentation is the 3D part. We use a 3D U-Net to map every voxel. The result is a rotatable 3D model that clearly shows the tumor sub-regions.",
-            "progress": "Longitudinal Progress Tracking compares 'Visit 1' to 'Visit 2' to calculate if a tumor has regressed (shrunk) or progressed (grown).",
+            "comparison": "Longitudinal Comparison analysis compares 'Visit 1' to 'Visit 2' to calculate if a tumor has regressed (shrunk) or progressed (grown).",
             "3d color": "Each color has a medical meaning:\n- Red: Enhancing Tumor (Active zones)\n- Yellow: Edema (Brain swelling)\n- Cyan: Necrotic Core (Dead tissue center)",
             "yellow": "Yellow represents Edema. This is fluid accumulation around the tumor that causes pressure. It's often what causes headaches for patients.",
             "red": "Red is the data-enhancing region. This is where the tumor is most active and consuming blood supply.",

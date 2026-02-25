@@ -17,7 +17,7 @@ A Flask-based web application for automated brain tumor detection, classificatio
 - **2D Classification**: Multi-class tumor detection (Glioma, Meningioma, Pituitary, No Tumor)
 - **3D Segmentation**: Voxel-level tumor mapping with sub-region identification
 - **Interactive 3D Visualization**: WebGL-based tumor model viewer
-- **Progress Tracking**: Longitudinal analysis for tumor growth monitoring
+- **Comparison**: Longitudinal analysis for tumor growth monitoring
 - **Medical Reports**: Automated PDF report generation
 - **AI Chatbot**: Olmo assistant for medical imaging guidance
 
