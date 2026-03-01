@@ -19,12 +19,14 @@ A Flask-based web application for automated brain tumor detection, classificatio
 - **Interactive 3D Visualization**: WebGL-based tumor model viewer
 - **Comparison**: Longitudinal analysis for tumor growth monitoring
 - **Medical Reports**: Automated PDF report generation
+- **Nearby Specialists**: Location-based search for neurologists and oncology specialists
 - **AI Chatbot**: Olmo assistant for medical imaging guidance
 
 ## Tech Stack
 
 - **Backend**: Flask, TensorFlow/Keras
 - **Frontend**: Vanilla JavaScript, Three.js
+- **APIs**: Google Places API (New) for specialist search
 - **ML Models**: Ensemble 2D CNN, 3D U-Net
 - **Medical Imaging**: NiBabel, NumPy
 
@@ -33,6 +35,7 @@ The easiest way to run TumorVision is using Docker, which handles all dependenci
 
 ### Prerequisites
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+- **Google Places API Key**: Required for the "Nearby Specialists" feature. Get one from the [Google Cloud Console](https://console.cloud.google.com/).
 
 ### 1. Build the App
 Open your terminal in the project folder and run:
@@ -42,7 +45,7 @@ docker build -t tumorvision .
 
 ### 2. Run the App
 ```bash
-docker run -p 5000:7860 tumorvision
+docker run -p 5000:7860 -e GOOGLE_PLACES_API_KEY="YOUR_KEY_HERE" tumorvision
 ```
 
 ### 3. Access
@@ -50,12 +53,16 @@ Open your browser and visit: `http://localhost:5000`
 
 *Note: The first time you run it, it will take ~2 minutes to automatically download the AI models (1.2GB) before the app starts.*
 
-## For Developers (GitHub & Secrets)
-If you are cloning this repo and need to configure API keys (e.g., for future AI features):
+## Configuration & Secrets
+If you are cloning this repo or deploying to a cloud platform:
 
-1.  **Duplicate** `.env.example` and rename it to `.env`.
-2.  **Add your secrets** to `.env` (e.g., `API_KEY=...`).
-3.  **Run** the app. Docker/Flask will load these variables.
+1.  **Local Development**: Create a `.env` file in the root directory and add:
+    ```env
+    GOOGLE_PLACES_API_KEY=your_actual_api_key_here
+    ```
+2.  **Hugging Face Spaces**: 
+    - Go to **Settings** > **Variables and Secrets**.
+    - Add a new **Secret** named `GOOGLE_PLACES_API_KEY`.
 
 > [!WARNING]
 > **Never** commit your `.env` file to GitHub. It is already ignored by `.gitignore`.
