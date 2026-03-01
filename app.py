@@ -428,7 +428,7 @@ def api_nearby_doctors():
         
         api_key = app.config.get('GOOGLE_API_KEY')
         if not api_key or api_key == 'YOUR_API_KEY_HERE':
-            return jsonify({'error': 'Google API Key not configured. Please add it to your .env file.'}), 500
+            return jsonify({'error': 'Google API Key not configured. Please add it to your environment variables or Space Secrets.'}), 500
 
         import requests
         
