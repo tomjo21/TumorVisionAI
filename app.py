@@ -459,7 +459,7 @@ def api_nearby_doctors():
 
         payload = {
             "textQuery": text_query,
-            "maxResultCount": 15
+            "maxResultCount": 10
         }
         
         if location_bias and lat and lng:
