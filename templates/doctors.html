@@ -5,8 +5,7 @@
 {% block content %}
 <div class="animate-fade-in" style="max-width: 1000px; margin: 0 auto; padding: 2rem;">
     <div style="margin-bottom: 3rem; text-align: center;">
-        <h1
-            style="font-size: 2.5rem; margin-bottom: 1rem; background: linear-gradient(135deg, #fff, var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--text-main);">
             Find Nearby Specialists
         </h1>
         <p style="color: var(--text-muted); font-size: 1.1rem;">
@@ -16,16 +15,17 @@
 
     <!-- Search Bar -->
     <div class="glass"
-        style="padding: 1.5rem; border-radius: 16px; margin-bottom: 2rem; display: flex; gap: 1rem; align-items: center;">
+        style="padding: 0.9rem 1.3rem; border-radius: 14px; margin-bottom: 2rem; display: flex; gap: 1rem; align-items: center; background: var(--card-bg); box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
         <div style="flex: 1; position: relative;">
             <i class="fa-solid fa-magnifying-glass"
-                style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
-            <input type="text" id="manual-location-input"
+                style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--primary); font-size: 1rem; opacity: 0.7;"></i>
+            <input type="text" id="manual-location-input" class="search-input"
                 placeholder="Enter city or address (e.g. New York, Alappuzha...)"
-                style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0.8rem 1rem 0.8rem 2.8rem; color: white; outline: none; transition: 0.3s;">
+                style="width: 100%; background: var(--bg-color); border: 1px solid var(--border); border-radius: 10px; padding: 0.8rem 1rem 0.8rem 3rem; color: var(--text-main); outline: none; transition: all 0.3s ease; font-size: 1rem;">
         </div>
-        <button onclick="handleManualSearch()" class="btn btn-primary" style="padding: 0.8rem 1.5rem;">
-            Search Location
+        <button onclick="handleManualSearch()" class="btn btn-primary"
+            style="padding: 0.8rem 1.8rem; font-size: 1rem; white-space: nowrap; border-radius: 10px; display: flex; gap: 0.4rem;">
+            Search <span class="hide-mobile">Location</span>
         </button>
     </div>
 
@@ -176,28 +176,40 @@
 
                 // Better type labeling
                 let typeLabel = "Specialist";
-                if (doc.types.includes('hospital')) typeLabel = "Medical Center";
-                if (doc.types.includes('neurologist')) typeLabel = "Neurologist";
-                if (doc.types.includes('oncologist')) typeLabel = "Oncology Specialist";
+                const types = doc.types || [];
+                if (types.some(t => t.includes('hospital') || t.includes('medical'))) typeLabel = "Medical Center";
+                if (types.some(t => t.includes('neurologist') || doc.name.toLowerCase().includes('neuro'))) typeLabel = "Neurologist";
+                if (types.some(t => t.includes('oncologist')) || doc.name.toLowerCase().includes('oncol') || doc.name.toLowerCase().includes('cancer')) typeLabel = "Oncology Specialist";
+
+                // Label color
+                const labelColors = {
+                    "Medical Center": "var(--primary)",
+                    "Neurologist": "#8b5cf6",
+                    "Oncology Specialist": "var(--danger-text)",
+                    "Specialist": "var(--text-muted)"
+                };
 
                 card.innerHTML = `
                     <div>
-                        <span class="type-tag">${typeLabel}</span>
-                        <h3 style="margin-bottom: 0.5rem; font-size: 1.2rem;">${doc.name}</h3>
-                        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            <i class="fa-solid fa-map-marker-alt" style="margin-right: 0.5rem; color: var(--secondary);"></i>${doc.address}
+                        <span class="type-tag" style="color: ${labelColors[typeLabel] || 'var(--text-muted)'}; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.08em;">${typeLabel.toUpperCase()}</span>
+                        <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; color: var(--text-main);">${doc.name}</h3>
+                        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                            <i class="fa-solid fa-map-marker-alt" style="margin-right: 0.4rem; color: var(--primary);"></i>${doc.address}
                         </p>
-                        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
-                            <i class="fa-solid fa-phone" style="margin-right: 0.5rem; color: var(--secondary);"></i>${doc.phone}
+                        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem;">
+                            <i class="fa-solid fa-phone" style="margin-right: 0.4rem; color: var(--primary);"></i>${doc.phone}
                         </p>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                    <div style="display: flex; gap: 0.5rem; justify-content: space-between; align-items: center; margin-top: auto;">
                         <span class="rating-badge">
                             <i class="fa-solid fa-star"></i> ${doc.rating === 'N/A' ? 'New' : doc.rating}
                         </span>
-                        <a href="${doc.link}" target="_blank" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.85rem;">
-                            View on Maps
-                        </a>
+                        <div style="display: flex; gap: 0.5rem;">
+                            ${doc.website && doc.website !== '#' ? `<a href="${doc.website}" target="_blank" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: var(--primary-10); color: var(--primary); border-radius: 8px;" title="Visit Website"><i class="fa-solid fa-globe"></i></a>` : ''}
+                            <a href="${doc.link}" target="_blank" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.85rem; border-radius: 8px;">
+                                View on Maps
+                            </a>
+                        </div>
                     </div>
                 `;
                 grid.appendChild(card);

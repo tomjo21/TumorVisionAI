@@ -348,66 +348,176 @@ def api_comparison():
 
 @app.route('/api/chat/olmo', methods=['POST'])
 def api_chat_olmo():
+    import random
     try:
         data = request.json
-        message = data.get('message', '').lower().strip('?!. ')
-        
-        # 1. CONVERSATIONAL / GENERAL RESPONSES
-        general_responses = {
-            "hello": "Hello! I'm Olmo, your medical imaging assistant. How's your day going?",
-            "hi": "Hi there! I'm Olmo. Ready to look at some scans?",
-            "how are you": "I'm functioning at 100% capacity and ready to analyze some MRIs! How about you?",
-            "who are you": "I'm Olmo, a specialized AI built to help you navigate TumorVision. I'm named after the majestic Olmo tree, symbolizing wisdom and protection.",
-            "what can you do": "I can explain 3D tumor mapping, help you track tumor growth over time, or walk you through the 2D classification results. Just ask!",
-            "thank": "You're very welcome! I'm here to make this complex data easier to understand.",
-            "bye": "Goodbye! I'll be here whenever you need another analysis.",
-            "weather": "I don't have a window, but it's always a clear day inside the server! Best to check your local forecast.",
-            "joke": "Why did the MRI scanner get a promotion? Because it was outstanding in its field (and very attractive!).",
-            "time": f"In the server world, it's always 'Analysis Time'! But your local clock should be accurate.",
-            "help": "I can help with: \n1. 3D Color Explanations\n2. Comparison analysis help\n3. Understanding AI Confidence\n4. Finding nearby specialists\n5. General small talk!"
-        }
+        message = data.get('message', '').lower().strip('?!., ')
 
-        # 2. SYSTEM / CLINICAL KNOWLEDGE
-        system_knowledge = {
-            "classification": "Classification uses our 2D ensemble model. It identifies if a tumor is a Glioma, Meningioma, or Pituitary tumor. We use Grad-CAM heatmaps to show you exactly where the AI is looking.",
-            "segmentation": "Segmentation is the 3D part. We use a 3D U-Net to map every voxel. The result is a rotatable 3D model that clearly shows the tumor sub-regions.",
-            "comparison": "Longitudinal Comparison analysis compares 'Visit 1' to 'Visit 2' to calculate if a tumor has regressed (shrunk) or progressed (grown).",
-            "3d color": "Each color has a medical meaning:\n- Red: Enhancing Tumor (Active zones)\n- Yellow: Edema (Brain swelling)\n- Cyan: Necrotic Core (Dead tissue center)",
-            "yellow": "Yellow represents Edema. This is fluid accumulation around the tumor that causes pressure. It's often what causes headaches for patients.",
-            "red": "Red is the data-enhancing region. This is where the tumor is most active and consuming blood supply.",
-            "blue": "Cyan/Blue is the Necrotic center. Aggressive tumors often outgrow their blood supply, causing the center to die off.",
-            "cyan": "Cyan/Blue is the Necrotic center. Aggressive tumors often outgrow their blood supply, causing the center to die off.",
-            "mri": "MRI stands for Magnetic Resonance Imaging. It uses strong magnets and radio waves to create detailed images of the brain without using radiation.",
-            "glioma": "A Glioma is a type of tumor that starts in the glial cells of the brain or spine. They are the most common type of primary brain tumor.",
-            "meningioma": "A Meningioma is a tumor that arises from the meninges — the membranes that surround your brain and spinal cord. They are usually slow-growing.",
-            "accuracy": "Our 2D model has a validation accuracy of 98.5%, while the 3D segmentation achieves a Dice Score of 0.89.",
+        # -----------------------------------------------
+        # PATTERN TABLE: list of ([trigger_phrases], [responses])
+        # The FIRST matching pattern wins.
+        # -----------------------------------------------
+        patterns = [
 
-        }
+            # ── Greetings ──────────────────────────────────────────────
+            (['hello', 'hi there', 'hey', 'howdy', 'greetings'], [
+                "Hello! I'm Olmo, your TumorVision assistant. How can I help you today?",
+                "Hey there! Ready to dive into some brain imaging? Ask me anything.",
+                "Hi! Whether it's MRI types, tumor classification, or finding specialists — I'm here."
+            ]),
+            (['how are you', 'how r u', "how's it going", 'you okay'], [
+                "Running at full capacity! Ask me anything about your scans or results.",
+                "All systems green! What can I help you with today?",
+                "I'm doing great — analysing data and ready to help. What's on your mind?"
+            ]),
+            (['who are you', 'what are you', 'tell me about yourself', 'your name'], [
+                "I'm Olmo — TumorVision's built-in AI assistant. I can explain tumor types, scan results, colors in the 3D model, and more.",
+                "Name's Olmo. I'm here to help you understand your MRI results and navigate TumorVision.",
+            ]),
+            (['what can you do', 'your capabilities', 'how can you help', 'what do you know'], [
+                "I can help with:\n• Explaining tumor types (Glioma, Meningioma, Pituitary)\n• 3D color meanings\n• MRI sequences & terms\n• Classification & segmentation\n• Treatment options\n• Finding nearby specialists\n\nJust ask!",
+            ]),
+            (['thank', 'thanks', 'appreciate', 'helpful'], [
+                "You're very welcome! Stay curious and take care.",
+                "Happy to help! Let me know if there's anything else.",
+                "Always here for you. Feel free to ask more anytime!"
+            ]),
+            (['bye', 'goodbye', 'see you', 'take care'], [
+                "Goodbye! Take care of yourself, and come back anytime.",
+                "See you! I'll be right here whenever you need me.",
+            ]),
+            (['joke', 'funny', 'make me laugh', 'humor'], [
+                "Why did the MRI scanner win an award? Because it was outstanding in its field — and very attractive!",
+                "How does a neurosurgeon greet someone? With a lobe of enthusiasm!",
+                "What did the brain tumor say to the surgeon? 'I think you're going to have a lot on your plate today.'",
+            ]),
 
-        # Logic: Check specific system keywords first, then general conversation
+            # ── Tumor Types ────────────────────────────────────────────
+            (['glioma', 'glioblastoma', 'gbm', 'glial'], [
+                "Gliomas arise from glial cells — the support cells of the brain. They range from Grade I (slow, benign) to Grade IV Glioblastoma (GBM), which is the most aggressive primary brain tumor. Treatment typically involves surgery, radiation, and temozolomide chemotherapy.",
+                "Glioma is the most common malignant brain tumor. Grade IV GBM has median survival of ~15 months with treatment. Our AI classifies these with 98.5% validation accuracy.",
+            ]),
+            (['meningioma', 'meninges', 'meningeal'], [
+                "Meningiomas grow from the meninges — the protective membranes around the brain. About 90% are benign and slow-growing. However, they can compress brain tissue and cause serious symptoms depending on their size and location.",
+                "Meningioma is actually the most common intracranial tumor (~37%). Most are benign and treated with observation, surgery, or radiosurgery (Gamma Knife).",
+            ]),
+            (['pituitary', 'adenoma', 'master gland', 'hormonal tumor'], [
+                "Pituitary tumors (adenomas) develop in the pituitary gland — your body's 'master gland'. They're usually benign but can disrupt hormonal balance, compress the optic chiasm (causing vision issues), and cause systemic effects like Cushing's disease or acromegaly.",
+                "Pituitary adenomas are mostly non-cancerous. Treatment often involves medications like dopamine agonists, or transsphenoidal surgery (through the nasal passage).",
+            ]),
+            (['tumor', 'tumour', 'brain cancer', 'intracranial', 'neoplasm'], [
+                "Brain tumors can be primary (starting in the brain) or secondary (metastases from other cancers). The three types TumorVision classifies are Glioma, Meningioma, and Pituitary Adenoma. Ask me about any specific one!",
+                "Not all brain tumors are cancerous. Meningiomas and pituitary adenomas are usually benign, while gliomas can range from benign to highly malignant.",
+            ]),
+            (['no tumor', 'normal', 'healthy', 'clear scan'], [
+                "When the model predicts 'No Tumor', it means no recognizable tumor pattern was found in the MRI slice. This is a good sign, but always confirm with a radiologist for a clinical diagnosis.",
+            ]),
+
+            # ── Symptoms ───────────────────────────────────────────────
+            (['symptom', 'signs', 'headache', 'seizure', 'vision', 'nausea', 'vomit'], [
+                "Common brain tumor symptoms include:\n• Persistent headaches (especially in the morning)\n• Seizures\n• Blurred or double vision\n• Nausea/vomiting\n• Personality or memory changes\n• Weakness on one side of the body\n\nThese depend heavily on the tumor's location.",
+                "Symptoms vary by tumor location. Frontal lobe tumors affect personality; parietal lobe affects sensation; occipital affects vision. Always see a neurologist if you're experiencing persistent symptoms.",
+            ]),
+
+            # ── Treatment ──────────────────────────────────────────────
+            (['treatment', 'therapy', 'surgery', 'radiation', 'chemo', 'chemotherapy', 'gamma knife', 'resection'], [
+                "Treatment options depend on tumor type, grade, and location:\n• **Surgery**: Primary approach to remove or debulk the tumor\n• **Radiation**: Targeted radiation (or Gamma Knife radiosurgery)\n• **Chemotherapy**: Often Temozolomide for gliomas\n• **Watch & Wait**: For small, benign tumors like low-grade meningiomas",
+                "Gamma Knife radiosurgery beams hundreds of thin radiation rays precisely at the tumor — no surgical cut needed. It's often used for small, deep, or recurrent tumors.",
+            ]),
+
+            # ── MRI & Imaging ──────────────────────────────────────────
+            (['mri', 'magnetic resonance', 'scan', 'imaging', 'what is mri'], [
+                "MRI (Magnetic Resonance Imaging) uses powerful magnets and radio waves to generate detailed images of soft tissue like the brain — without any ionizing radiation. It's the gold standard for brain tumor detection.",
+                "MRI is preferred over CT for brain imaging because it offers superior soft tissue contrast. For tumors, doctors often request contrast-enhanced MRI (with gadolinium) to highlight active tumor regions.",
+            ]),
+            (['t1', 't2', 'flair', 'sequence', 'contrast', 'gadolinium', 'mri type'], [
+                "Common MRI sequences used in brain tumor imaging:\n• **T1**: Good for anatomy. Tumors appear dark.\n• **T1+Gd**: After contrast injection — active tumor lights up brightly.\n• **T2**: Fluid appears bright; shows edema well.\n• **FLAIR**: Suppresses CSF; great for detecting infiltration near ventricles.",
+            ]),
+            (['nifti', 'nii', 'volume', '3d file', 'dicom'], [
+                "NIfTI (.nii or .nii.gz) is a medical imaging format that stores 3D volumetric brain data. Our segmentation model takes NIfTI files and generates a full tumor map across all brain slices.",
+                "Upload a NIfTI (.nii.gz) file in the Segmentation section. The 3D U-Net will segment tumor regions and generate a rotatable 3D model.",
+            ]),
+
+            # ── TumorVision System ─────────────────────────────────────
+            (['classification', 'classify', '2d model', 'detect', 'prediction'], [
+                "Classification uses our 2D Ensemble model (ResNet + EfficientNet) to predict whether an MRI slice shows Glioma, Meningioma, Pituitary Tumor, or No Tumor. It also generates a Grad-CAM heatmap to show which regions the AI focused on.",
+                "The 2D classification model achieves 98.5% validation accuracy. Upload any standard MRI JPG/PNG in the Classification section to get an instant prediction.",
+            ]),
+            (['segmentation', 'segment', '3d model', 'u-net', '3d scan', 'voxel', 'unet'], [
+                "Segmentation is the 3D part of TumorVision. A 3D U-Net processes the full volumetric scan to classify each voxel as tumor, edema, necrotic core, or healthy tissue. The result is a color-coded rotatable 3D model.",
+                "The 3D segmentation model achieves a Dice Score of 0.89. Upload a NIfTI file (from an MRI scanner) to see the full tumor map.",
+            ]),
+            (['comparison', 'longitudinal', 'progression', 'regression', 'growth', 'shrink', 'visit 1', 'visit 2'], [
+                "The Comparison tool compares tumor volumes from two different time-point scans. It calculates whether the tumor has progressed (grown) or regressed (shrunk) — extremely useful for monitoring treatment effectiveness.",
+                "In the Comparison section, upload two NIfTI files from different dates. TumorVision will calculate exact volume changes in cm³ and show whether the treatment is working.",
+            ]),
+            (['specialist', 'doctor', 'neurologist', 'oncologist', 'find doctor', 'near me'], [
+                "The Specialists section uses your location to find the nearest neurologists and oncologists. Just allow location access or enter a city/area in the search box.",
+                "In the Specialists tab, you can search for neurologists and oncologists near you. Results show distance, phone number, ratings, and a direct link to Google Maps.",
+            ]),
+            (['report', 'pdf', 'download', 'medical report'], [
+                "After any classification or segmentation result, you can download a medical PDF report. It includes the AI prediction, confidence score, tumor metrics, and a scan visualization.",
+            ]),
+            (['confidence', 'accuracy', 'reliable', 'trust', 'how accurate'], [
+                "Our 2D classification model was trained on 7,000+ annotated MRI slices and achieves 98.5% validation accuracy. For 3D segmentation, we measure Dice Score (0.89), which is the clinical standard for overlap quality.",
+                "The confidence percentage shown is the model's softmax probability for its top prediction. A result above 90% usually indicates a very confident classification — but always validate with a radiologist.",
+            ]),
+
+            # ── 3D Colors ──────────────────────────────────────────────
+            (['color', 'colour', '3d color', '3d colour', 'what do colors mean', 'color mean'], [
+                "In the 3D tumor model:\n• 🔴 **Red** — Enhancing Tumor (most active, blood-hungry zones)\n• 🟡 **Yellow** — Peritumoral Edema (swelling around the tumor)\n• 🔵 **Cyan/Blue** — Necrotic Core (dead tissue at the center)\n\nThese map to the BraTS segmentation standard.",
+            ]),
+            (['red', 'enhancing', 'active tumor'], [
+                "Red in the 3D model represents the Enhancing Tumor region — the most metabolically active part that absorbs contrast agent. Surgeons target this region first.",
+            ]),
+            (['yellow', 'edema', 'swelling'], [
+                "Yellow is Peritumoral Edema — fluid accumulation around the tumor causing brain pressure. It's often what causes headaches and neurological symptoms in patients.",
+            ]),
+            (['cyan', 'blue', 'necrotic', 'dead tissue'], [
+                "Cyan/Blue is the Necrotic Core — dead tissue at the tumor center. This happens when the tumor grows faster than its blood supply. It's common in high-grade gliomas.",
+            ]),
+
+            # ── General Medical ────────────────────────────────────────
+            (['dice score', 'dice', 'metric', 'iou', 'overlap'], [
+                "Dice Score measures how well a predicted segmentation mask overlaps with the ground truth. A score of 1.0 is perfect; our 3D model achieves 0.89 which is clinically competitive.",
+            ]),
+            (['grad-cam', 'gradcam', 'heatmap', 'explainability', 'xai'], [
+                "Grad-CAM (Gradient-weighted Class Activation Mapping) generates a heatmap showing which parts of the MRI the AI paid most attention to. This makes the AI decision transparent and helps clinicians verify the result.",
+            ]),
+            (['biopsy', 'pathology', 'tissue sample', 'grade'], [
+                "A biopsy is the most definitive way to grade a tumor. AI imaging helps narrow down the diagnosis, but a tissue biopsy is required to confirm the grade (I–IV) and molecular markers (like IDH mutation in gliomas).",
+            ]),
+            (['idh', 'mutation', 'molecular marker', 'genetic'], [
+                "IDH (Isocitrate Dehydrogenase) mutation status is a critical prognostic marker for gliomas. IDH-mutant gliomas generally have better outcomes than IDH-wildtype ones. MRI can suggest but not confirm IDH status — biopsy is needed.",
+            ]),
+            (['survival', 'prognosis', 'life expectancy', 'outcome'], [
+                "Prognosis depends on tumor type, grade, location, and patient age:\n• Grade I Glioma: Can be cured with surgery\n• Grade IV GBM: ~15 months median with treatment\n• Meningioma (benign): Excellent with surgery\n• Pituitary Adenoma: Very good with medication or surgery",
+            ]),
+
+            # ── Chatbot Meta ───────────────────────────────────────────
+            (['help', 'what to ask', 'guide me'], [
+                "Try asking me:\n• 'What is Glioma?'\n• 'What do the 3D colors mean?'\n• 'How does segmentation work?'\n• 'What are brain tumor symptoms?'\n• 'How accurate is the model?'\n• 'Tell me a joke' 😄",
+            ]),
+        ]
+
+        # ── Matching Logic ──────────────────────────────────────────────
         response = ""
-        
-        # Check System Keywords (Prioritize)
-        found_system = False
-        for key in system_knowledge:
-            if key in message:
-                response = system_knowledge[key]
-                found_system = True
+        for triggers, replies in patterns:
+            if any(trigger in message for trigger in triggers):
+                response = random.choice(replies)
                 break
-        
-        # Check General Keywords
-        if not found_system:
-            for key in general_responses:
-                if key in message:
-                    response = general_responses[key]
-                    break
-        
-        # Fallback
+
+        # ── Fallback ────────────────────────────────────────────────────
         if not response:
             if len(message) < 3:
-                response = "I'm listening! You can ask me things like 'What do the colors mean?' or just say 'Tell me a joke'."
+                response = "I'm listening! Try asking about tumor types, MRI sequences, or the 3D colors."
             else:
-                response = "That's an interesting question! While I'm specialized in the TumorVision system and Brain MRI analysis, I'm always learning. Could you rephrase that, or ask me about our 3D segmentation tools?"
+                fallbacks = [
+                    "That's a great question! I'm focused on brain imaging and TumorVision. Try asking about Glioma, MRI sequences, or the 3D segmentation model.",
+                    "Hmm, I'm not sure I caught that. You can ask me about classification results, tumor types, or finding a specialist near you.",
+                    "I'm best at brain tumor topics! Ask me something like 'What is Meningioma?' or 'How does comparison work?'"
+                ]
+                response = random.choice(fallbacks)
 
         return jsonify({'response': response})
     except Exception as e:
@@ -423,84 +533,127 @@ def api_nearby_doctors():
         lat = request.args.get('lat')
         lng = request.args.get('lng')
         query = request.args.get('query')
-        # Default radius 5km if not specified
         radius = 20000
-        
+
         api_key = app.config.get('GOOGLE_API_KEY')
         if not api_key or api_key == 'YOUR_API_KEY_HERE':
             return jsonify({'error': 'Google API Key not configured. Please add it to your environment variables or Space Secrets.'}), 500
 
-        import requests
-        
-        # Google Places API (New) Text Search - Better for specific specialties
-        url = "https://places.googleapis.com/v1/places:searchText"
-        
+        import requests as req_lib
+        import concurrent.futures
+
+        places_url = "https://places.googleapis.com/v1/places:searchText"
         headers = {
             "Content-Type": "application/json",
             "X-Goog-Api-Key": api_key,
-            "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.rating,places.googleMapsUri,places.types,places.nationalPhoneNumber,places.location"
+            "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.rating,places.googleMapsUri,places.types,places.nationalPhoneNumber,places.location,places.websiteUri"
         }
-        
-        # Determine Search Query and Location Bias
-        if query:
-            text_query = f"best neurologists and oncology specialists in {query}"
-            location_bias = None
-        else:
-            text_query = "best neurologists and oncology specialists"
+
+        user_lat = float(lat) if lat else None
+        user_lng = float(lng) if lng else None
+
+        location_bias = None
+        if not query and user_lat is not None and user_lng is not None:
             location_bias = {
                 "circle": {
-                    "center": {
-                        "latitude": float(lat) if lat else 0.0,
-                        "longitude": float(lng) if lng else 0.0
-                    },
+                    "center": {"latitude": user_lat, "longitude": user_lng},
                     "radius": float(radius)
                 }
             }
 
-        payload = {
-            "textQuery": text_query,
-            "maxResultCount": 10
-        }
-        
-        if location_bias and lat and lng:
-            payload["locationBias"] = location_bias
+        # Run separate queries to ensure coverage of all specialist types
+        # Two focused queries only — avoid generic hospital queries that return unrelated doctors
+        search_queries = [
+            ("neurologist", "neuro"),
+            ("oncologist cancer specialist", "onco")
+        ]
+        if query:
+            search_queries = [(f"{term} near {query}", tag) for term, tag in search_queries]
 
-        response = requests.post(url, json=payload, headers=headers)
-        data = response.json()
-        
-        if 'error' in data:
-            return jsonify({'error': f"Google API Error: {data['error'].get('message', 'Unknown error')}"}), 500
+        def search_places(term_tag):
+            term, tag = term_tag
+            payload = {
+                "textQuery": term,
+                "maxResultCount": 10,
+                "rankPreference": "DISTANCE"
+            }
+            if location_bias:
+                payload["locationBias"] = location_bias
+            try:
+                resp = req_lib.post(places_url, json=payload, headers=headers, timeout=8)
+                return [(p, tag) for p in resp.json().get('places', [])]
+            except Exception:
+                return []
 
-        if 'places' not in data:
-            return jsonify({'doctors': [], 'message': 'No specialists found nearby.'})
-            
-        results = []
-        user_lat = float(lat) if lat else None
-        user_lng = float(lng) if lng else None
+        # Parallel requests
+        all_places = []  # list of (place_dict, source_tag)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            futures = {executor.submit(search_places, qt): qt for qt in search_queries}
+            for future in concurrent.futures.as_completed(futures):
+                all_places.extend(future.result())
 
-        for place in data['places']:
+        # Deduplicate by name+address
+        seen = set()
+        candidates = []
+        for place, source_tag in all_places:
+            key = place.get('displayName', {}).get('text', '') + place.get('formattedAddress', '')
+            if key in seen:
+                continue
+            seen.add(key)
+
             loc = place.get('location', {})
             p_lat = loc.get('latitude')
             p_lng = loc.get('longitude')
-            
-            # Simple distance calculation (Euclidean approximation for small distances)
             distance = 99999
             if p_lat and p_lng and user_lat is not None and user_lng is not None:
                 distance = ((p_lat - user_lat)**2 + (p_lng - user_lng)**2)**0.5
 
-            results.append({
+            candidates.append({
                 'name': place.get('displayName', {}).get('text', 'N/A'),
                 'address': place.get('formattedAddress', 'N/A'),
                 'phone': place.get('nationalPhoneNumber', 'No phone listed'),
                 'rating': place.get('rating', 'N/A'),
                 'link': place.get('googleMapsUri', '#'),
+                'website': place.get('websiteUri', '#') if place.get('websiteUri') else '#',
                 'types': place.get('types', []),
+                'source': source_tag,
                 'distance': distance
             })
-            
-        # Sort by distance
+
+        # Strict relevance filter:
+        # Accept only results with neuro/oncology keywords in name,
+        # OR places explicitly typed as neurologist/oncologist/hospital by Google.
+        NEURO_ONCO_KEYWORDS = [
+            'neuro', 'oncol', 'cancer', 'tumor', 'tumour', 'brain',
+            'spine', 'spinal', 'neurosurg', 'chemo', 'hematol', 'onco',
+            'neuroscience', 'radiosurg', 'gamma knife'
+        ]
+        BLOCKED_KEYWORDS = [
+            'naturopath', 'ayurved', 'homeo', 'dental', 'dentist',
+            'optom', 'ophthal', 'physiother', 'dermatol', 'gynae',
+            'gynecol', 'pediatric', 'veterinar', 'ent clinic',
+            'urology', 'gastroenter', 'pulmonol', 'cardiolog',
+            'general physician', 'general practice'
+        ]
+        ACCEPTED_TYPES = {'neurologist', 'oncologist'}
+
+        def is_relevant(doc):
+            name_lower = doc['name'].lower()
+            if any(kw in name_lower for kw in BLOCKED_KEYWORDS):
+                return False
+            # Must POSITIVELY match: keyword in name OR explicit Google type
+            if any(kw in name_lower for kw in NEURO_ONCO_KEYWORDS):
+                return True
+            if any(t in ACCEPTED_TYPES for t in doc['types']):
+                return True
+            return False
+
+        results = [d for d in candidates if is_relevant(d)]
+
+        # Sort by distance and return top 10
         results.sort(key=lambda x: x['distance'])
-            
+        results = results[:10]
+
         return jsonify({'doctors': results})
 
     except Exception as e:

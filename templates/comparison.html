@@ -3,42 +3,44 @@
 {% block title %}Comparison - TumorVision AI{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1>Longitudinal Comparison</h1>
-    <p>Upload multiple sequential scans to track tumor volume trends over time.</p>
+<div class="page-header" style="text-align: center; margin-bottom: 3rem;">
+    <h1 style="color: var(--primary); font-size: 2.5rem; margin-bottom: 0.5rem;">Longitudinal Comparison</h1>
+    <p style="color: var(--text-muted); font-size: 1.1rem;">Upload multiple sequential scans to track tumor volume
+        trends over time.</p>
 </div>
 
-<div class="dashboard-grid">
+<div class="dashboard-grid" style="display: flex; gap: 2rem; flex-wrap: wrap;">
     <!-- Upload Section -->
-    <div class="glass" style="flex: 1; padding: 2rem; border-radius: 12px; min-width: 350px;">
-        <h3 style="margin-bottom: 1.5rem;">Upload Scans</h3>
-        <form id="comparisonForm" class="file-upload-container">
-            <div class="upload-zone" id="dropZoneMulti">
+    <div class="card" style="flex: 1; padding: 2rem; border-radius: 16px; min-width: 350px;">
+        <h3 style="margin-bottom: 1.5rem; color: var(--text-main);">Upload Scans</h3>
+        <form id="progressForm" class="file-upload-container">
+            <div class="upload-area" id="dropZoneMulti">
                 <i class="fa-solid fa-cloud-arrow-up"
                     style="font-size: 3rem; color: var(--secondary); margin-bottom: 1rem;"></i>
-                <p>Drag & drop multiple NIfTI files here</p>
-                <p style="font-size: 0.8rem; color: #888;">(.nii or .nii.gz format only)</p>
-                <input type="file" id="comparisonFiles" name="files" multiple accept=".nii,.gz" style="display: none;">
-                <button type="button" class="btn btn-secondary" style="margin-top: 1rem;"
-                    onclick="document.getElementById('comparisonFiles').click()">Select Files</button>
+                <p style="font-weight: 500;">Drag & drop multiple NIfTI files here</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">(.nii or .nii.gz format only)</p>
+                <input type="file" id="progressFiles" name="files" multiple accept=".nii,.gz" style="display: none;">
+                <button type="button" class="btn btn-secondary" style="margin-top: 1rem; border-radius: 12px;"
+                    onclick="document.getElementById('progressFiles').click()">Select Files</button>
             </div>
 
             <div id="fileList" style="margin-top: 1.5rem; max-height: 200px; overflow-y: auto;">
                 <!-- Files will be listed here -->
             </div>
 
-            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 2rem;">Analyze
-                Comparison</button>
+            <button type="submit" class="btn btn-primary"
+                style="width: 100%; margin-top: 2rem; border-radius: 12px; font-size: 1.1rem;">Compare
+                Scans</button>
         </form>
     </div>
 
     <!-- Analytics Section -->
-    <div class="glass" style="flex: 2; padding: 1.5rem; border-radius: 12px; min-width: 300px;">
-        <h3>Volume Trend</h3>
+    <div class="card" style="flex: 2; padding: 1.5rem; border-radius: 16px; min-width: 300px;">
+        <h3 style="color: var(--text-main);">Volume Trend</h3>
         <div id="chartContainer" style="height: 350px; position: relative; margin-top: 1rem;">
-            <canvas id="comparisonChart"></canvas>
+            <canvas id="progressChart"></canvas>
             <div id="chartPlaceholder"
-                style="position: absolute; top:50%; left:50%; transform: translate(-50%, -50%); color: #666;">
+                style="position: absolute; top:50%; left:50%; transform: translate(-50%, -50%); color: var(--text-muted);">
                 Upload scans to see the trend
             </div>
         </div>
@@ -46,9 +48,9 @@
 </div>
 
 <div class="dashboard-grid" style="margin-top: 2rem;" id="comparisonTableContainer" hidden>
-    <div class="glass" style="width: 100%; padding: 1.5rem; border-radius: 12px;">
-        <h3>Detailed Metrics</h3>
-        <table class="metrics-table" id="comparisonTable" style="margin-top: 1rem;">
+    <div class="card" style="width: 100%; padding: 1.5rem; border-radius: 16px;">
+        <h3 style="color: var(--text-main);">Detailed Metrics</h3>
+        <table class="metrics-table" id="progressTable" style="margin-top: 1rem; width: 100%;">
             <thead>
                 <tr>
                     <th>Scan Batch</th>
@@ -67,8 +69,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const comparisonForm = document.getElementById('comparisonForm');
-    const fileInput = document.getElementById('comparisonFiles');
+    const progressForm = document.getElementById('progressForm');
+    const fileInput = document.getElementById('progressFiles');
     const fileListDisplay = document.getElementById('fileList');
     let chart = null;
 
@@ -76,18 +78,18 @@
         fileListDisplay.innerHTML = '';
         Array.from(fileInput.files).forEach(file => {
             const div = document.createElement('div');
-            div.className = 'glass';
-            div.style = "padding: 0.5rem 1rem; margin-bottom: 0.5rem; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1)";
-            div.innerHTML = `<i class="fa-solid fa-file-medical"></i> ${file.name}`;
+            div.className = 'card';
+            div.style = "padding: 0.5rem 1rem; margin-bottom: 0.5rem; font-size: 0.9rem; border: 1px solid var(--border); background: var(--overlay-5); color: var(--text-main);";
+            div.innerHTML = `<i class="fa-solid fa-file-medical" style="color: var(--primary);"></i> &nbsp;${file.name}`;
             fileListDisplay.appendChild(div);
         });
     };
 
-    comparisonForm.onsubmit = async (e) => {
+    progressForm.onsubmit = async (e) => {
         e.preventDefault();
         const files = fileInput.files;
         if (files.length < 2) {
-            alert("Please select at least 2 scans to track comparison.");
+            alert("Please select at least 2 scans to compare.");
             return;
         }
 
@@ -95,7 +97,7 @@
         Array.from(files).forEach(f => formData.append('files', f));
 
         // Show loading
-        const btn = comparisonForm.querySelector('button[type="submit"]');
+        const btn = progressForm.querySelector('button[type="submit"]');
         const originalText = btn.innerText;
         btn.innerText = "Analyzing scans...";
         btn.disabled = true;
@@ -110,7 +112,7 @@
             if (data.error) throw new Error(data.error);
 
             renderTrend(data.results);
-            renderComparisonTable(data.results);
+            renderTable(data.results);
 
         } catch (err) {
             alert("Error: " + err.message);
@@ -122,7 +124,7 @@
 
     function renderTrend(results) {
         document.getElementById('chartPlaceholder').style.display = 'none';
-        const ctx = document.getElementById('comparisonChart').getContext('2d');
+        const ctx = document.getElementById('progressChart').getContext('2d');
 
         const labels = results.map(r => r.filename);
         const values = results.map(r => {
@@ -133,6 +135,11 @@
 
         if (chart) chart.destroy();
 
+        const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#0ea5e9';
+        const primary10Color = getComputedStyle(document.documentElement).getPropertyValue('--primary-10').trim() || 'rgba(14, 165, 233, 0.1)';
+        const overlay5Color = getComputedStyle(document.documentElement).getPropertyValue('--overlay-5').trim() || 'rgba(0, 0, 0, 0.05)';
+        const textMutedColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#64748b';
+
         chart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -140,12 +147,12 @@
                 datasets: [{
                     label: 'Total Tumor Volume (cm³)',
                     data: values,
-                    borderColor: '#22d3ee',
-                    backgroundColor: 'rgba(34, 211, 238, 0.1)',
+                    borderColor: primaryColor,
+                    backgroundColor: primary10Color,
                     fill: true,
                     tension: 0.4,
                     pointRadius: 6,
-                    pointBackgroundColor: '#22d3ee'
+                    pointBackgroundColor: primaryColor
                 }]
             },
             options: {
@@ -154,30 +161,48 @@
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: { color: 'rgba(255,255,255,0.05)' },
-                        ticks: { color: '#888' }
+                        grid: { color: overlay5Color },
+                        ticks: { color: textMutedColor }
                     },
                     x: {
                         grid: { display: false },
-                        ticks: { color: '#888' }
+                        ticks: { color: textMutedColor }
                     }
                 },
                 plugins: {
-                    legend: { labels: { color: '#fff' } }
+                    legend: { labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-main').trim() || '#1e3a8a', font: { family: 'Inter', weight: 500 } } }
                 }
             }
         });
     }
 
-    function renderComparisonTable(results) {
+    window.addEventListener('theme-changed', () => {
+        if (chart) {
+            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#0ea5e9';
+            const primary10Color = getComputedStyle(document.documentElement).getPropertyValue('--primary-10').trim() || 'rgba(14, 165, 233, 0.1)';
+            const overlay5Color = getComputedStyle(document.documentElement).getPropertyValue('--overlay-5').trim() || 'rgba(0, 0, 0, 0.05)';
+            const textMutedColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#64748b';
+
+            chart.data.datasets[0].borderColor = primaryColor;
+            chart.data.datasets[0].backgroundColor = primary10Color;
+            chart.data.datasets[0].pointBackgroundColor = primaryColor;
+            chart.options.scales.y.grid.color = overlay5Color;
+            chart.options.scales.y.ticks.color = textMutedColor;
+            chart.options.scales.x.ticks.color = textMutedColor;
+            chart.options.plugins.legend.labels.color = getComputedStyle(document.documentElement).getPropertyValue('--text-main').trim() || '#1e3a8a';
+            chart.update();
+        }
+    });
+
+    function renderTable(results) {
         const container = document.getElementById('comparisonTableContainer');
         container.hidden = false;
-        const tbody = document.querySelector('#comparisonTable tbody');
+        const tbody = document.querySelector('#progressTable tbody');
         tbody.innerHTML = '';
 
         results.forEach((res, i) => {
             let changeHtml = '--';
-            let statusHtml = '<span class="status-badge" style="background:#888;">Baseline</span>';
+            let statusHtml = '<span class="status-badge" style="background:var(--overlay-10); color:var(--text-main);">Baseline</span>';
 
             // Safe Access Helper
             const getVol = (item) => {
@@ -197,19 +222,19 @@
                 }
 
                 const sign = change > 0 ? '+' : '';
-                const color = change > 0 ? '#ef4444' : '#10b981';
-                changeHtml = `<span style="color:${color}">${sign}${change.toFixed(2)}%</span>`;
+                const color = change > 0 ? 'var(--danger-text)' : 'var(--success-text)';
+                changeHtml = `<span style="color:${color}; font-weight: 500;">${sign}${change.toFixed(2)}%</span>`;
 
                 statusHtml = change > 0
-                    ? '<span class="status-badge" style="background:#ef4444;">Growth</span>'
-                    : '<span class="status-badge" style="background:#10b981;">Regression</span>';
+                    ? '<span class="status-badge" style="background:var(--danger-bg); color:var(--danger-text); border: 1px solid var(--danger-border);">Growth</span>'
+                    : '<span class="status-badge" style="background:var(--success-bg); color:var(--success-text); border: 1px solid var(--success-border);">Regression</span>';
             }
 
             const row = `
-                <tr>
-                    <td>#${i + 1}</td>
+                <tr style="color: var(--text-main);">
+                    <td style="font-weight: 500;">#${i + 1}</td>
                     <td>${res.filename}</td>
-                    <td>${curr.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td style="font-weight: 600;">${curr.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td>${changeHtml}</td>
                     <td>${statusHtml}</td>
                 </tr>
@@ -229,22 +254,25 @@
     .metrics-table th {
         text-align: left;
         padding: 1rem;
-        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-        color: #888;
-        font-weight: 500;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .metrics-table td {
         padding: 1rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     }
 
     .status-badge {
-        padding: 0.25rem 0.75rem;
+        padding: 0.35rem 0.75rem;
         border-radius: 20px;
         font-size: 0.8rem;
         font-weight: 600;
-        color: white;
+        display: inline-block;
     }
 </style>
 {% endblock %}
